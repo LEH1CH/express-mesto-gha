@@ -1,31 +1,45 @@
-const express = require("express");
+const express = require('express');
+const bodyParser = require('body-parser');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const helmet = require('helmet');
+const mongoose = require('mongoose');
+const userRouter = require('./routes/users');
+const cardRouter = require('./routes/cards');
+const { messages, statuses } = require('./utils/constants');
 
-const { PORT = 3000 } = process.env;
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const E = require("./errors");
-
-mongoose.connect("mongodb://127.0.0.1:27017/mestodb");
+const { PORT = 3000, DATABASE_URL = 'mongodb://127.0.0.1:27017/mestodb' } =
+  process.env;
 
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+mongoose
+  .connect(DATABASE_URL)
+  .then(() => {
+    console.log(`База данных подключена ${DATABASE_URL}`);
+  })
+  .catch((err) => {
+    console.log('Ошибка подключения к базе данных');
+    console.error(err);
+  });
 
 app.use((req, res, next) => {
   req.user = {
-    _id: "64a57809e21da4dc22ba6563",
+    _id: '64a57809e21da4dc22ba6563',
   };
 
   next();
 });
 
-app.use("/users", require("./routes/users"));
-app.use("/cards", require("./routes/cards"));
+app.use(helmet());
+app.use(bodyParser.json());
+app.use('/users', userRouter);
+app.use('/cards', cardRouter);
 
-app.use("*", (req, res) =>
-  res.status(E.NOT_FOUND_ERROR_CODE).send(E.NOT_FOUND_ERROR_MESSAGE)
-);
+app.use((req, res) => {
+  res
+    .status(statuses.notFound)
+    .send({ message: `${messages.shared.notFound}` });
+});
 
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);

@@ -1,36 +1,33 @@
-/* eslint-disable prefer-regex-literals */
-
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const validator = require('validator');
 
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 30,
+      required: [true, 'Поле "name" должно быть заполнено'],
+      minLength: [2, 'Минимальная длина поля "name" - 2'],
+      maxLength: [30, 'Максимальная длина поля "name" - 30'],
     },
     about: {
       type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 30,
+      required: [true, 'Поле "about" должно быть заполнено'],
+      minLength: [2, 'Минимальная длина поля "name" - 2'],
+      maxLength: [30, 'Максимальная длина поля "name" - 30'],
     },
     avatar: {
       type: String,
-      required: true,
       validate: {
-        validator(v) {
-          const regex = new RegExp(/https?:\/\/(\w|\d|\/)+\.\w+/);
-          return regex.test(v);
-        },
-        message: "Ошибка в адресе аватара",
+        validator: (v) => validator.isURL(v),
+        message: 'Некорректный URL',
       },
+      required: true,
     },
   },
-  {
-    versionKey: false,
-  }
+  { versionKey: false }
 );
 
-module.exports = mongoose.model("user", userSchema);
+const User = mongoose.model('user', userSchema);
+
+module.exports = User;
