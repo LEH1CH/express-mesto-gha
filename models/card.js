@@ -1,45 +1,46 @@
+/* eslint-disable prefer-regex-literals */
+
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const validator = require('validator');
 
 const cardSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Поле "name" должно быть заполнено'],
-      minLength: [2, 'Минимальная длина поля "name" - 2'],
-      maxLength: [30, 'Максимальная длина поля "name" - 30'],
+      required: true,
+      minlength: 2,
+      maxlength: 30,
     },
     link: {
       type: String,
-      validate: {
-        validator: (v) => validator.isURL(v),
-        message: 'Некорректный URL',
-      },
       required: true,
+      validate: {
+        validator(v) {
+          return /^https?:\/\/(www\.)?[a-z0-9\-._~:/?#[\]@!$&'()*+,;=]+#?$/i.test(
+            v,
+          );
+        },
+        message: 'Ошибка в адресе изображения',
+      },
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'user',
       required: true,
     },
-    likes: {
-      type: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'user',
-        },
-      ],
-      default: [],
-    },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,
     },
   },
-  { versionKey: false }
+  {
+    versionKey: false,
+  },
 );
 
-const Card = mongoose.model('card', cardSchema);
-
-module.exports = Card;
+module.exports = mongoose.model('card', cardSchema);
